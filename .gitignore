@@ -1,0 +1,30 @@
+## OS-specific files
+.DS_Store
+Thumbs.db
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPS/
+[Rr]elease/
+[Rr]eleasePS/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bsearch/
+Platform/
+_UpgradeReport_Files/
+Backup*/
+[Bb]in/
+[Oo]bj/
+[Ex]ternal/
+
+## Visual Studio cache and settings
+.vs/
