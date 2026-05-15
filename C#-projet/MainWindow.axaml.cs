@@ -8,34 +8,44 @@ using Avalonia.Media.Imaging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Text;
+using Avalonia;
 
 namespace C__projet
 {
     public partial class MainWindow : Window
     {
-
         private string? _cheminImageSelectionnee;
         private string? _cheminImageADecoder;
+
         public MainWindow()
         {
-
             InitializeComponent();
 
-            this.FindControl<Button>("BtnOuvrirDecodage").Click += SelectionnerImageADecoder;
-            this.FindControl<Button>("BtnLancerDecodage").Click += AuClicLancerDecodage;
-            // On lie nos boutons à des fonctions C#
-            this.FindControl<Button>("BtnOuvrirEncodage").Click += SelectionnerImageSource;
+            var toggleTheme = this.FindControl<ToggleSwitch>("ToggleTheme");
+            if (toggleTheme != null)
+            {
+                toggleTheme.IsCheckedChanged += (sender, args) =>
+                {
+                    if (toggleTheme.IsChecked == true)
+                    {
+                        Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
+                    }
+                    else
+                    {
+                        Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
+                    }
+                };
+            }
 
-            this.FindControl<Button>("BtnLancerEncodage").Click += AuClicLancerEncodage;
+            this.FindControl<Button>("BtnOuvrirDecodage")!.Click += SelectionnerImageADecoder;
+            this.FindControl<Button>("BtnLancerDecodage")!.Click += AuClicLancerDecodage;
+            this.FindControl<Button>("BtnOuvrirEncodage")!.Click += SelectionnerImageSource;
+            this.FindControl<Button>("BtnLancerEncodage")!.Click += AuClicLancerEncodage;
         }
 
-        // Fonction pour ouvrir l'explorateur de fichiers
         private async void SelectionnerImageSource(object? sender, RoutedEventArgs e)
         {
-            // 1. On accède au gestionnaire de stockage du système
             var storage = this.StorageProvider;
-
-            // 2. On ouvre la fenêtre de sélection de fichier
             var result = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Choisir une image source",
@@ -43,18 +53,13 @@ namespace C__projet
                 AllowMultiple = false
             });
 
-            // 3. Si l'utilisateur a bien choisi un fichier
             if (result.Count > 0)
             {
-
                 _cheminImageSelectionnee = result[0].Path.LocalPath;
-                // 1. On récupère le flux (le contenu) du fichier
-                using var stream = await result[0].OpenReadAsync();
 
-                // 2. On crée un objet Bitmap (une image compréhensible par C#)
+                using var stream = await result[0].OpenReadAsync();
                 var bitmap = new Bitmap(stream);
 
-                // 3. On l'affiche dans notre composant Image du XAML
                 var preview = this.FindControl<Avalonia.Controls.Image>("ImgPreview");
                 if (preview != null)
                 {
@@ -70,52 +75,45 @@ namespace C__projet
 
             if (string.IsNullOrEmpty(_cheminImageSelectionnee) || string.IsNullOrEmpty(message))
             {
-                // On pourrait ajouter une alerte ici : "Veuillez choisir une image et un message"
+                if (input != null) input.Text = "Erreur : Veuillez choisir une image et taper un message.";
                 return;
             }
 
-            // On lance ton algorithme !
             ExecuterEncodage(_cheminImageSelectionnee, message);
+
+            if (input != null) input.Text = "Chiffrement réussi ! L'image est sauvegardée sous 'image_cachee.png'.";
         }
 
         private void ExecuterEncodage(string cheminImage, string messageSecret)
         {
-            // 1. Charger l'image
             using SixLabors.ImageSharp.Image<Rgba32> image = SixLabors.ImageSharp.Image.Load<Rgba32>(cheminImage);
-
-            // 2. Convertir le message en bits (0 et 1)
-            byte[] messageBytes = Encoding.UTF8.GetBytes(messageSecret);
+            byte[] messageBytes = Encoding.UTF8.GetBytes(messageSecret + "\0");
 
             int bitIndex = 0;
             int totalBits = messageBytes.Length * 8;
 
-            // 3. Boucler sur les pixels
             for (int y = 0; y < image.Height; y++)
             {
                 for (int x = 0; x < image.Width; x++)
                 {
                     if (bitIndex < totalBits)
                     {
-                        // On récupère le pixel actuel
                         Rgba32 pixel = image[x, y];
 
-                        // On extrait le bit qu'on veut cacher (0 ou 1)
                         int byteIdx = bitIndex / 8;
                         int bitShift = 7 - (bitIndex % 8);
                         int bitACacher = (messageBytes[byteIdx] >> bitShift) & 1;
 
-                        // --- MAGIE DU LSB ---
-                        // On met le dernier bit du ROUGE à 0, puis on injecte notre bit
+                        // Injection du bit dans le bit de poids faible (LSB) du canal Rouge
                         pixel.R = (byte)((pixel.R & 0xFE) | bitACacher);
-                        // --------------------
 
-                        // On réenregistre le pixel modifié
                         image[x, y] = pixel;
                         bitIndex++;
                     }
                 }
             }
-            // 4. Sauvegarder l'image finale en PNG (obligatoire pour ne pas perdre les bits !)
+
+            // Sauvegarde au format PNG pour éviter la compression destructrice
             image.Save("image_cachee.png");
         }
 
@@ -131,25 +129,38 @@ namespace C__projet
             if (result.Count > 0)
             {
                 _cheminImageADecoder = result[0].Path.LocalPath;
-                // Optionnel : tu peux aussi afficher cette image dans une preview côté décodage
             }
         }
 
-        // 2. Déclenchement du décodage
         private void AuClicLancerDecodage(object? sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(_cheminImageADecoder)) return;
+            var output = this.FindControl<TextBox>("TxtResultat");
+
+            if (string.IsNullOrEmpty(_cheminImageADecoder))
+            {
+                if (output != null) output.Text = "⚠️ Erreur : Veuillez d'abord sélectionner une image.";
+                return;
+            }
 
             string messageExtrait = ExecuterDecodage(_cheminImageADecoder);
 
-            var output = this.FindControl<TextBox>("TxtResultat");
-            if (output != null) output.Text = messageExtrait;
+            if (output != null)
+            {
+                if (string.IsNullOrWhiteSpace(messageExtrait))
+                {
+                    output.Text = "Aucun message caché trouvé dans cette image.";
+                }
+                else
+                {
+                    output.Text = "Message découvert : \n" + messageExtrait;
+                }
+            }
         }
 
-        // 3. L'ALGORITHME DE DÉCODAGE LSB
         private string ExecuterDecodage(string cheminImage)
         {
-            using SixLabors.ImageSharp.Image<Rgba32> image = SixLabors.ImageSharp.Image.Load<Rgba32>(cheminImage); List<byte> messageBytes = new List<byte>();
+            using SixLabors.ImageSharp.Image<Rgba32> image = SixLabors.ImageSharp.Image.Load<Rgba32>(cheminImage);
+            List<byte> messageBytes = new List<byte>();
             byte currentByte = 0;
             int bitCount = 0;
 
@@ -159,18 +170,14 @@ namespace C__projet
                 {
                     Rgba32 pixel = image[x, y];
 
-                    // On extrait le dernier bit du rouge (0 ou 1)
+                    // Extraction du LSB du canal Rouge
                     int bit = pixel.R & 1;
-
-                    // On décale l'octet en cours vers la gauche et on ajoute le bit
                     currentByte = (byte)((currentByte << 1) | bit);
                     bitCount++;
 
-                    // Dès qu'on a 8 bits, on a un caractère complet
                     if (bitCount == 8)
                     {
-                        // CONDITION D'ARRÊT : En LSB, on s'arrête souvent sur un caractère nul (0)
-                        // ou on définit une longueur. Ici, on va tout lire, mais attention aux caractères bizarres à la fin.
+                        // Condition d'arrêt sur caractère nul (Null Byte)
                         if (currentByte == 0) return Encoding.UTF8.GetString(messageBytes.ToArray());
 
                         messageBytes.Add(currentByte);

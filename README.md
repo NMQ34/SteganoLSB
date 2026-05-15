@@ -26,3 +26,11 @@ L'application est divisée en 4 onglets simples pour une prise en main immédiat
    - Cliquez sur "Analyser les bits".
    - Le message secret s'affichera dans la zone de texte en dessous.
 4. ** Paramètres** : Informations sur la version et options d'interface.
+
+---
+
+## Génération de l'exécutable (.exe)
+Par souci de bonnes pratiques et pour garantir l'intégrité du dépôt, les fichiers binaires compilés ne sont pas inclus dans ce repo. Pour générer l'exécutable autonome pour Windows, utilisez la commande suivante :
+
+```bash
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true

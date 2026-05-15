@@ -24,7 +24,7 @@
                 <TextBlock Text="Cacher un message" FontSize="18" FontWeight="Bold"/>
                 <Button Name="BtnOuvrirEncodage" Content="📁 Choisir une image source" HorizontalAlignment="Stretch"/>
                 <TextBox Name="InputMessage" Watermark="Tapez votre secret ici..." Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
-                <Button Name="BtnLancerEncodage" Content="🚀 Lancer l'encodage" HorizontalAlignment="Stretch" Background="SteelBlue" Foreground="White"/>
+                <Button Name="BtnLancerEncodage" Content="Lancer l'encodage" HorizontalAlignment="Stretch" Background="SteelBlue" Foreground="White"/>
                 <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Height="150">
                      <Image Name="ImgPreview" Stretch="Uniform"/>
                 </Border>
@@ -43,7 +43,7 @@
         <TabItem Header="⚙️ Paramètres">
             <StackPanel Margin="20" Spacing="10">
                 <TextBlock Text="Réglages de l'application" FontSize="18" FontWeight="Bold"/>
-                <ToggleSwitch Content="Mode Sombre (Beta)" OffContent="Désactivé" OnContent="Activé"/>
+		<ToggleSwitch Name="ToggleTheme" Content="Mode Sombre" OffContent="Désactivé" OnContent="Activé"/>
                 <TextBlock Text="Version du logiciel : 1.0.0" Foreground="Gray"/>
                 <TextBlock Text="Auteurs : Votre Groupe" Foreground="Gray"/>
             </StackPanel>
