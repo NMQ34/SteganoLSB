@@ -45,7 +45,7 @@
                 <TextBlock Text="Réglages de l'application" FontSize="18" FontWeight="Bold"/>
 		<ToggleSwitch Name="ToggleTheme" Content="Mode Sombre" OffContent="Désactivé" OnContent="Activé"/>
                 <TextBlock Text="Version du logiciel : 1.0.0" Foreground="Gray"/>
-                <TextBlock Text="Auteurs : Votre Groupe" Foreground="Gray"/>
+                <TextBlock Text="Auteurs : SteganoLSB" Foreground="Gray"/>
             </StackPanel>
         </TabItem>
     </TabControl>
